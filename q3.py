@@ -6,6 +6,7 @@ import numpy as np
 def printList(l):
 	for x in l:
 		print(x)
+
 # A class for a generic automaton
 
 class G:
@@ -34,7 +35,10 @@ class G:
 			# Return the destination state
 			return [possible_transtions[0][1]]
 
+	# function that takes an automaton, a list of events of partially observable
+
 	def makeEventsPartiallyObservable(self, E_partialObs, e_replace):
+
 		# iterate through events and their indices in the event list
 		found_flag = False
 		for idx, e in enumerate(self.E):
