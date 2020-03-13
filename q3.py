@@ -76,7 +76,7 @@ class G:
 		for e in word:
 
 			# return undefined if the previous transition was undefined
-			if curr_x == None:
+			if self.transition(curr_x, e) == None:
 				return None
 
 			# choose the first one for now
@@ -214,6 +214,8 @@ def getObserverG(G_in,x0):
 		del x_new[0]
 
 	return G(G_in.E, x_old, T_obs, x0)
+
+
 # q3
 print("\n\n\nQ3")
 # Test parallel composition for robot and map
@@ -248,10 +250,10 @@ T_Gm = [('r1','r2','e'),		# set of enabled transitions for Gm
 x0_Gm = 'r1'					# initial state for Gm
 Gm = G(E_Gm, X_Gm, T_Gm, x0_Gm)
 
-Gr_Gm = getParallelComposition(Gr,Gm)
+Gn = getParallelComposition(Gr,Gm)
 #includes blocked moves
 print("The parallel composition of Gr and Gm")
-Gr_Gm.printG()
+Gn.printG()
 
 
 
@@ -259,51 +261,61 @@ Gr_Gm.printG()
 print("\n\n\nQ4")
 
 E_partialObs = ['n','e','s','w']	# set of partially observable states
-partialObsGr_Gm = Gr_Gm
-partialObsGr_Gm.makeEventsPartiallyObservable(E_partialObs,'m')
+partialObsGn = Gn
+partialObsGn.makeEventsPartiallyObservable(E_partialObs,'m')
 
 print("The parallel composition of Gr and Gm with movement made partially observable")
-partialObsGr_Gm.printG()
+partialObsGn.printG()
 
 # q5
 print("\n\n\nQ5 part 1")
-x0_obsGr_Gm = [1] * len(partialObsGr_Gm.X)
-obsGr_Gm = getObserverG(partialObsGr_Gm,x0_obsGr_Gm)
-print("The observer automaton for the partially observable automaton in Q4 has", len(obsGr_Gm.X), "states")
+x0_obsGn = [1] * len(partialObsGn.X)
+obsGn = getObserverG(partialObsGn,x0_obsGn)
+print("The observer automaton for the partially observable automaton in Q4 has", len(obsGn.X), "states")
 
 print("\nQ5 part 2")
 print("The states of the observer automaton are:")
-printList(obsGr_Gm.X)
+printList(obsGn.X)
 print("The row sum is:")
-print(obsGr_Gm.getXRowSum())
+print(obsGn.getXRowSum())
 print("The column sum is:")
-print(obsGr_Gm.getXColSum())
+print(obsGn.getXColSum())
 print("The first 4 singular values are: ")
-print(obsGr_Gm.getXSingVals()[0:4])
-# obsGr_Gm.printG()
+print(obsGn.getXSingVals()[0:4])
+# obsGn.printG()
 
 # still need to list row sum and column sum and the singular value whatever that is
 print("\nQ5 part 3")
 
+
 print("\nQ5 part 4")
 event_sequence = ['m','r','r','m','r','m','r','r','m','r','m']
-final_x = obsGr_Gm.traverseG(event_sequence, x0_obsGr_Gm)
+final_x = obsGn.traverseG(event_sequence, x0_obsGn)
 if final_x != None:
 	print("The following sequence of events is applied:")
 	print(event_sequence)
 	print("The final state was:")
 	print(final_x)
 	final_x_name = []
-	for idx, x in enumerate(partialObsGr_Gm.X):	
+	for idx, x in enumerate(partialObsGn.X):	
 		if final_x[idx] == 1:
 			final_x_name.append(x)
 	print("This corresponds to state: ", final_x_name)
+print("The observer automaton can be used to find the position of the ending state by traversing it according to its transition matrix")
+print("Each state is a vector of 1s or 0s where each element of the vector corresponds to a particular state in Gn. The final state reached in the observer automaton only has a single 1. This means that there is only one possible state that the automaton could have ended up in.")
+print("The final state is the state that corresponds to the set element of the state vector.")
 
 # Q6
 
 print("\n\n\nQ6")
 
-# create new automaton Gs for room layout
+print("From Gm we can tell that as long as the sequence of events allows the robot to traverse at least 4 different rooms then the robot will always be able to tell where it ends up as there are no sets of 4 connected rooms that are rotationally symmetrical")
+print("In other words, all possible paths that have 4 or more different connected rooms will uniquely identify the robots position (but not heading)")
+print("Once the position is identified, the heading can be found by looking at the transitions between different states given that the robot can only move in the direction that it is facing.")
+
+print("\nThe observer automaton for the partially observed Gn shows this more clearly as there are sequences where both the robot's position and heading will be certain.")
+print("The fact that some of the elements of the row sum of the state matrix are 1s tells us that the some of the states in the observer automaton have only one possible state in Gn")
+# create new automaton Gy for room layout
 
 s_events = ['n','e','s','w']
 s_states = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6']
@@ -317,14 +329,33 @@ s_transitions = [('r1','r2','e'),
 				('r5','r4','n'),
 				('r6','r5','w'),
 				('r5','r6','e')]
-x0_Gs = 'r1'
-Gs = G(s_events, s_states, s_transitions, x0_Gs)
-Gr_Gs = getParallelComposition(Gr,Gs)
+x0_Gy = 'r1'
+Gy = G(s_events, s_states, s_transitions, x0_Gy)
+Gr_Gy = getParallelComposition(Gr,Gy)
 
-E_partialObsGr_Gs = ['n','e','s','w']
-partialObsGr_Gs = Gr_Gs
-partialObsGr_Gs.makeEventsPartiallyObservable(E_partialObsGr_Gs,'m')+
+E_partialObsGr_Gy = ['n','e','s','w']
+partialObsGr_Gy = Gr_Gy
+partialObsGr_Gy.makeEventsPartiallyObservable(E_partialObsGr_Gy,'m')
 
 # Get observer automaton
-x0_obsGr_Gs = [1] * len(partialObsGr_Gs.X)
-obsGr_Gs = getObserverG(partialObsGr_Gs, x0_obsGr_Gs)
+x0_obsGr_Gy = [1] * len(partialObsGr_Gy.X)
+obsGr_Gy = getObserverG(partialObsGr_Gy, x0_obsGr_Gy)
+final_x_Gr_Gy = obsGr_Gy.traverseG(event_sequence, x0_obsGr_Gy)
+print(final_x_Gr_Gy)
+
+print("Let's refer to the automaton in figure 2 as Gy and the parallel composition of Gr and Gy as Gry")
+
+print("Firstly, the route created by following the sequence of events given in question 3 is not possible in Gry.")
+print("This can be visually verified by looking at the shape of the path that is created from following such a sequence and seeing that there is no possible starting point in Gry that allows that path.")
+print("\nIn the general case, the robot will never be able to have certainty in its position and heading if the room layout is Gy as the automaton is rotationally symmetrical and also there is no state that maintains its position within Gy after being rotated 180 degrees (such a state can be created if there was a room between rm3 and rm4)")
+print("This can be verified by looking at the row sum of the state space of the observer automaton generated from the partially observed Gry")
+print("None of the elements of the row sum are 1, this indicates that there are no sequences of events in Gry that that lead to a unique final position and heading")
+
+print("The states of the observer automaton for Gry are:")
+printList(obsGr_Gy.X)
+print("The row sum is:")
+print(obsGr_Gy.getXRowSum())
+print("The column sum is:")
+print(obsGr_Gy.getXColSum())
+print("The first 4 singular values are: ")
+print(obsGr_Gy.getXSingVals()[0:4])	
